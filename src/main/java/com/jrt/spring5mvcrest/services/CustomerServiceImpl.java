@@ -1,11 +1,8 @@
 package com.jrt.spring5mvcrest.services;
 
-import com.jrt.spring5mvcrest.api.mapper.CategoryMapper;
 import com.jrt.spring5mvcrest.api.mapper.CustomerMapper;
-import com.jrt.spring5mvcrest.api.model.CategoryDTO;
 import com.jrt.spring5mvcrest.api.model.CustomerDTO;
 import com.jrt.spring5mvcrest.domain.Customer;
-import com.jrt.spring5mvcrest.repositories.CategoryRepository;
 import com.jrt.spring5mvcrest.repositories.CustomerRepository;
 import org.springframework.stereotype.Service;
 
@@ -45,8 +42,11 @@ public class CustomerServiceImpl implements CustomerService {
 
     @Override
     public CustomerDTO createNewCustomer(CustomerDTO customerDTO) {
-        Customer customer = customerMapper.customerDTOToCustomer(customerDTO);
 
+        return saveAndReturnDTO(customerMapper.customerDTOToCustomer(customerDTO));
+    }
+
+    private CustomerDTO saveAndReturnDTO(Customer customer) {
         Customer savedCustomer = customerRepository.save(customer);
 
         CustomerDTO returnDTO = customerMapper.customerToCustomerDTO(savedCustomer);
@@ -54,5 +54,34 @@ public class CustomerServiceImpl implements CustomerService {
         returnDTO.setCustomerUrl("/api/v1/customers/" + savedCustomer.getId());
 
         return returnDTO;
+    }
+
+    @Override
+    public CustomerDTO updateCustomer(Long id, CustomerDTO customerDTO) {
+        Customer customer = customerMapper.customerDTOToCustomer(customerDTO);
+        customer.setId(id);
+
+        return saveAndReturnDTO(customer);
+    }
+
+    @Override
+    public CustomerDTO patchCustomer(Long id, CustomerDTO customerDTO) {
+        return customerRepository.findById(id).map(customer -> {
+
+            if(customerDTO.getFirstName() != null){
+                customer.setFirstName(customerDTO.getFirstName());
+            }
+
+            if(customerDTO.getLastName() != null){
+                customer.setLastName(customerDTO.getLastName());
+            }
+
+            CustomerDTO returnDto = customerMapper.customerToCustomerDTO(customerRepository.save(customer));
+
+            returnDto.setCustomerUrl("/api/v1/customers/" + id);
+
+            return returnDto;
+
+        }).orElseThrow(RuntimeException::new);
     }
 }
