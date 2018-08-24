@@ -81,11 +81,7 @@ public class CustomerServiceImpl implements CustomerService {
                 customer.setLastName(customerDTO.getLastName());
             }
 
-            CustomerDTO returnDto = customerMapper.customerToCustomerDTO(customerRepository.save(customer));
-
-            returnDto.setCustomerUrl(getCustomerUrl(id));
-
-            return returnDto;
+            return saveAndReturnDTO(customer);
 
         }).orElseThrow(ResourceNotFoundException::new);
     }
